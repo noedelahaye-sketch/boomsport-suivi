@@ -60,6 +60,9 @@ export const CONTACT_ROLES = ["Agent", "Famille", "Presse club", "Presse ligue",
 export function authErrorMessage(error, mode) {
   const code = error?.code ?? "";
   const msg = (error?.message ?? "").toLowerCase();
+  if (msg.includes("non autoris") || msg.includes("database error saving new user") || code === "unexpected_failure") {
+    return "Cette adresse n'est pas autorisée. Seuls les membres de l'équipe peuvent se connecter : demande à un membre de t'ajouter dans Réglages.";
+  }
   if (code === "over_email_send_rate_limit" || msg.includes("rate limit")) {
     return "Trop de liens envoyés récemment (limite d'environ 2 emails par heure). Réessaie dans une heure, ou connecte-toi avec ton mot de passe si tu en as défini un.";
   }

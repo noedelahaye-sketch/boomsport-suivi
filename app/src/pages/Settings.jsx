@@ -70,7 +70,10 @@ export default function Settings() {
 
       <section className="card">
         <h2>Membres de l'équipe</h2>
-        <p className="muted small">Seules ces adresses peuvent voir et modifier les données. Chacun se connecte avec un lien reçu par email.</p>
+        <p className="muted small">
+          Seules ces adresses peuvent se connecter et voir les données. Pour inviter quelqu'un, ajoute son adresse ici,
+          puis il se connecte avec « Lien par email » et choisit son mot de passe. Retirer une adresse supprime son accès.
+        </p>
         <ul className="list">
           {members.map((m) => (
             <li key={m.email}>
