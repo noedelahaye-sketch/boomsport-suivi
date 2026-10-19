@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../supabase.js";
 import { ACCRED_STATUS, CATEGORIES, COUNTRIES, MATCH_STATUS, EVENT_TYPES, fmtDate, fmtTime, fromLocalInput, fullName, remove, save, toLocalInput, useTable } from "../lib.js";
 import { Badge, Empty, Field, IconButton, Modal } from "../ui.jsx";
+import { Popover } from "../DataTable.jsx";
 import { EventForm } from "./Calendar.jsx";
 
 const DAYS = 14;
@@ -86,6 +87,30 @@ function MatchForm({ match, clubs, onClose, onSaved }) {
   );
 }
 
+const DEFAULT_FILTERS = {
+  cats: ["international", "binational", "jeune_binational"],
+  countries: [], comps: [], contact: "all", planning: "all", onlyTracked: true,
+};
+
+// Filtres mémorisés dans le navigateur (retrouvés à la prochaine visite)
+function useStoredFilters() {
+  const KEY = "upcoming:filters";
+  const [filters, setFilters] = useState(() => {
+    try { return { ...DEFAULT_FILTERS, ...JSON.parse(localStorage.getItem(KEY)) }; } catch { return DEFAULT_FILTERS; }
+  });
+  useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(filters)); } catch { /* stockage indisponible */ } }, [filters]);
+  return [filters, setFilters];
+}
+
+function FilterChip({ label, onRemove }) {
+  return (
+    <span className="fchip">
+      {label}
+      <button onClick={onRemove} title="Retirer ce filtre" aria-label={`Retirer le filtre ${label}`}>×</button>
+    </span>
+  );
+}
+
 export default function Upcoming() {
   const [matches, setMatches] = useState([]);
   const [players] = useTable("players", "id,first_name,last_name,category,club_id", "last_name");
@@ -93,9 +118,10 @@ export default function Upcoming() {
   const [editMatch, setEditMatch] = useState(null);
   const [editEvent, setEditEvent] = useState(null);
   const [syncing, setSyncing] = useState(false);
-  const [onlyTracked, setOnlyTracked] = useState(true);
-  const [cats, setCats] = useState(["international", "binational", "jeune_binational"]);
-  const [country, setCountry] = useState("");
+  const [contacts] = useTable("contacts", "id,player_id,club_id", "id");
+  const [filters, setFilters] = useStoredFilters();
+  const { cats, countries, comps, contact, planning, onlyTracked } = filters;
+  const setF = (patch) => setFilters((f) => ({ ...f, ...patch }));
 
   const load = useCallback(async () => {
     const from = new Date(); from.setHours(0, 0, 0, 0);
@@ -116,13 +142,37 @@ export default function Upcoming() {
   }, [players]);
   const clubById = useMemo(() => Object.fromEntries(clubs.map((c) => [c.id, c])), [clubs]);
 
-  const enriched = matches
-    .map((m) => ({
-      ...m,
-      _players: [...(playersByClub[m.home_club_id] ?? []), ...(playersByClub[m.away_club_id] ?? [])].filter((p) => cats.includes(p.category)),
-    }))
+  // Qui a au moins un contact : joueurs (agent, famille…) et clubs (presse…)
+  const withContact = useMemo(() => {
+    const set = new Set();
+    for (const c of contacts) { if (c.player_id) set.add(c.player_id); if (c.club_id) set.add(c.club_id); }
+    return set;
+  }, [contacts]);
+
+  const enriched = useMemo(() => matches
+    .map((m) => {
+      const ps = [...(playersByClub[m.home_club_id] ?? []), ...(playersByClub[m.away_club_id] ?? [])].filter((p) => cats.includes(p.category));
+      const clubIds = [m.home_club_id, m.away_club_id].filter(Boolean);
+      return {
+        ...m,
+        _players: ps,
+        _countries: clubIds.map((id) => clubById[id]?.country).filter(Boolean),
+        _contact: ps.some((p) => withContact.has(p.id)) || clubIds.some((id) => withContact.has(id)),
+        _trip: m.events?.some((e) => e.type === "deplacement"),
+      };
+    })
     .filter((m) => !onlyTracked || m._players.length > 0)
-    .filter((m) => !country || [clubById[m.home_club_id]?.country, clubById[m.away_club_id]?.country].includes(country));
+    .filter((m) => !countries.length || m._countries.some((c) => countries.includes(c)))
+    .filter((m) => !comps.length || comps.includes(m.competition))
+    .filter((m) => contact === "all" || (contact === "with" ? m._contact : !m._contact))
+    .filter((m) => planning === "all" || (planning === "trip" ? m._trip : !m._trip)),
+  [matches, playersByClub, clubById, withContact, cats, countries, comps, contact, planning, onlyTracked]);
+
+  // Compétitions présentes sur la période, pour le filtre
+  const competitions = useMemo(() => [...new Set(matches.map((m) => m.competition).filter(Boolean))].sort((a, b) => a.localeCompare(b, "fr")), [matches]);
+  const toggle = (key, value) => setF({ [key]: filters[key].includes(value) ? filters[key].filter((x) => x !== value) : [...filters[key], value] });
+  const activeCount = (countries.length ? 1 : 0) + (comps.length ? 1 : 0) + (contact !== "all" ? 1 : 0) + (planning !== "all" ? 1 : 0)
+    + (cats.length !== DEFAULT_FILTERS.cats.length || !cats.every((c) => DEFAULT_FILTERS.cats.includes(c)) ? 1 : 0) + (onlyTracked ? 0 : 1);
 
   const days = useMemo(() => {
     const g = {};
@@ -165,20 +215,68 @@ export default function Upcoming() {
         </div>
       </div>
 
-      <div className="toolbar">
-        <div className="segmented">
-          {Object.entries(CATEGORIES).map(([k, l]) => (
-            <button key={k} className={cats.includes(k) ? "on" : ""}
-              onClick={() => setCats(cats.includes(k) ? cats.filter((c) => c !== k) : [...cats, k])}>
-              <span className={"dot cat-" + k} />{l}
-            </button>
-          ))}
-        </div>
-        <select className="compact" value={country} onChange={(e) => setCountry(e.target.value)}>
-          <option value="">Tous les pays</option>
-          {Object.entries(COUNTRIES).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-        </select>
-        <label className="check small"><input type="checkbox" checked={onlyTracked} onChange={(e) => setOnlyTracked(e.target.checked)} /> Avec un joueur suivi</label>
+      <div className="toolbar filters-bar">
+        <Popover label={`Filtrer${activeCount ? ` · ${activeCount}` : ""}`} active={activeCount > 0}>
+          <div className="fgroup">
+            <h4>Type de joueur</h4>
+            <div className="fopts">
+              {Object.entries(CATEGORIES).map(([k, l]) => (
+                <label key={k} className="check small"><input type="checkbox" checked={cats.includes(k)} onChange={() => toggle("cats", k)} /><span className={"dot cat-" + k} />{l}</label>
+              ))}
+            </div>
+          </div>
+          <div className="fgroup">
+            <h4>Pays <span className="muted">(club du joueur)</span></h4>
+            <div className="fopts cols">
+              {Object.entries(COUNTRIES).map(([k, l]) => (
+                <label key={k} className="check small"><input type="checkbox" checked={countries.includes(k)} onChange={() => toggle("countries", k)} />{l}</label>
+              ))}
+            </div>
+          </div>
+          <div className="fgroup">
+            <h4>Contact</h4>
+            <div className="segmented">
+              {[["all", "Tous"], ["with", "Avec un contact"], ["without", "Sans contact"]].map(([k, l]) => (
+                <button key={k} className={contact === k ? "on" : ""} onClick={() => setF({ contact: k })}>{l}</button>
+              ))}
+            </div>
+            <p className="muted small hint">Un contact enregistré pour l'un des joueurs ou pour son club.</p>
+          </div>
+          <div className="fgroup">
+            <h4>Déplacement</h4>
+            <div className="segmented">
+              {[["all", "Tous"], ["trip", "Déjà prévu"], ["notrip", "Pas encore prévu"]].map(([k, l]) => (
+                <button key={k} className={planning === k ? "on" : ""} onClick={() => setF({ planning: k })}>{l}</button>
+              ))}
+            </div>
+          </div>
+          {competitions.length > 0 && (
+            <div className="fgroup">
+              <h4>Compétition</h4>
+              <div className="fopts cols scroll">
+                {competitions.map((c) => (
+                  <label key={c} className="check small"><input type="checkbox" checked={comps.includes(c)} onChange={() => toggle("comps", c)} />{c}</label>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="fgroup">
+            <label className="check small"><input type="checkbox" checked={onlyTracked} onChange={(e) => setF({ onlyTracked: e.target.checked })} /> Seulement les matchs avec un joueur suivi</label>
+          </div>
+          <div className="popover-foot">
+            <span className="muted small">{enriched.length} match{enriched.length > 1 ? "s" : ""}</span>
+            <button className="small ghost" onClick={() => setFilters(DEFAULT_FILTERS)}>Réinitialiser</button>
+          </div>
+        </Popover>
+
+        {/* Filtres actifs, retirables d'un clic */}
+        {countries.map((c) => <FilterChip key={c} label={COUNTRIES[c]} onRemove={() => toggle("countries", c)} />)}
+        {(cats.length !== DEFAULT_FILTERS.cats.length || !cats.every((c) => DEFAULT_FILTERS.cats.includes(c))) &&
+          <FilterChip label={`Joueurs : ${cats.map((c) => CATEGORIES[c]).join(", ") || "aucun"}`} onRemove={() => setF({ cats: DEFAULT_FILTERS.cats })} />}
+        {contact !== "all" && <FilterChip label={contact === "with" ? "Avec un contact" : "Sans contact"} onRemove={() => setF({ contact: "all" })} />}
+        {planning !== "all" && <FilterChip label={planning === "trip" ? "Déplacement prévu" : "Déplacement non prévu"} onRemove={() => setF({ planning: "all" })} />}
+        {comps.map((c) => <FilterChip key={c} label={c} onRemove={() => toggle("comps", c)} />)}
+        {!onlyTracked && <FilterChip label="Tous les matchs" onRemove={() => setF({ onlyTracked: true })} />}
       </div>
 
       {days.length === 0 && (

@@ -432,3 +432,21 @@ tr.group-row .caret { color: var(--faint); display: inline-block; width: 1rem; }
   .datatable .table-wrap { max-height: none; }
   .fc .fc-toolbar { flex-direction: column; gap: .5rem; }
 }
+
+/* ---------- Filtres de la vue 14 jours ---------- */
+.filters-bar { margin-bottom: 1rem; }
+.filters-bar .popover { min-width: 340px; gap: 0; padding: .4rem .9rem .7rem; }
+.fgroup { padding: .7rem 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: .45rem; }
+.fgroup:last-of-type { border-bottom: none; }
+.fgroup h4 { margin: 0; font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.fopts { display: flex; flex-direction: column; gap: .35rem; }
+.fopts.cols { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .9rem; }
+.fopts.scroll { max-height: 160px; overflow-y: auto; }
+.fopts .check { white-space: normal; }
+.fgroup .hint { margin: 0; font-size: .78rem; }
+.fchip {
+  display: inline-flex; align-items: center; gap: .25rem; height: 30px; padding: 0 .3rem 0 .7rem; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent-ink); font-size: .84rem; font-weight: 500;
+}
+.fchip button { height: 22px; width: 22px; padding: 0; justify-content: center; border: none; background: transparent; color: inherit; border-radius: 50%; font-size: 1rem; }
+.fchip button:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }

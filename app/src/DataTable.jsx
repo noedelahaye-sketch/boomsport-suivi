@@ -64,7 +64,7 @@ function store(key, value) {
 }
 
 // Petit menu déroulant ancré sous un bouton, fermé au clic extérieur
-function Popover({ label, active, children, align = "left" }) {
+export function Popover({ label, active, children, align = "left" }) {
   const [open, setOpen] = useState(false);
   const [shift, setShift] = useState(0);
   const ref = useRef(null);
