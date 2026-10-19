@@ -389,7 +389,7 @@ tr.group-row .caret { color: var(--faint); display: inline-block; width: 1rem; }
 @media (max-width: 1100px) {
   :root { --sidebar: 56px; }
   .sidebar { padding: .9rem .45rem; align-items: center; }
-  .brand-text, .nav a span, .nav-logout span { display: none; }
+  .sidebar .brand-text, .nav a span, .nav-logout span { display: none; }
   .nav a, .nav-logout { width: 40px; height: 38px; justify-content: center; padding: 0; }
   .nav a.active::before { left: -.45rem; }
   .brand { padding: 0; }

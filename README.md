@@ -2,7 +2,7 @@
 
 Outil privé de suivi des joueurs congolais / d'origine congolaise (France et pays frontaliers).
 
-- `app/` : le site (Vite + React), à lancer avec `npm --prefix app run dev` → http://localhost:3000
+- `app/` : le site (Vite + React), à lancer en local avec `npm --prefix app run dev` → http://localhost:3000
 - `supabase/functions/sync-matches/` : fonction qui synchronise le calendrier complet des clubs (FotMob, ESPN en secours), lancée à 5h et 16h UTC et via le bouton « Mettre à jour les matchs »
 
 ## Base de données (Supabase, projet `boomsport-suivi-joueurs`)
@@ -10,11 +10,12 @@ Outil privé de suivi des joueurs congolais / d'origine congolaise (France et pa
 Tables : `players`, `clubs`, `contacts`, `interactions`, `matches`, `accreditations`, `events` (déplacements / publications), `members`.
 Accès : seules les adresses présentes dans `members` voient et modifient les données (RLS). Connexion par lien envoyé par email.
 
-## Mise en ligne
+## Mise en ligne (GitHub Pages)
 
-1. `npm --prefix app run build` puis déposer le dossier `app/dist` sur Netlify (glisser-déposer) ou Vercel.
-2. Dans Supabase → Authentication → URL Configuration : mettre l'adresse du site dans « Site URL » et « Redirect URLs ».
-3. Ajouter les membres de l'équipe dans Réglages.
+- Adresse du site : https://noedelahaye-sketch.github.io/boomsport-suivi/
+- Pour publier une modification : `./deploy.sh` (construit le site et l'envoie sur la branche `gh-pages`, en ligne en 1 à 2 minutes). Gratuit et sans limite.
+- Le code est public, les données ne le sont pas : elles restent dans Supabase, accessibles uniquement aux membres connectés.
+- Dans Supabase → Authentication → URL Configuration, l'adresse du site doit figurer dans « Site URL » et « Redirect URLs » pour les liens de connexion par email.
 
 ## Matchs automatiques (gratuit, sans clé)
 
