@@ -295,6 +295,8 @@ form.inline { display: flex; gap: .4rem; margin-top: .4rem; }
 /* ---------- Fiches ---------- */
 button.icon.edit { color: var(--muted); padding: 0 .4rem; }
 button.icon.edit:hover { color: var(--accent-ink); background: var(--accent-soft); }
+button.icon.delete { color: var(--muted); padding: 0 .4rem; }
+button.icon.delete:hover { color: var(--red-ink); background: var(--red-soft); }
 .sheet-head { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: 1.2rem; }
 .infos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem 1.75rem; margin: 0; }
 .info dt { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; margin-bottom: .1rem; }

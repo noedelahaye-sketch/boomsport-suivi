@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../supabase.js";
 import { CATEGORIES, MATCH_STATUS, POSITIONS, age, flag, fmtDate, fmtTime, fullName, useTable } from "../lib.js";
-import { Badge, EditButton, Empty, Info, Modal } from "../ui.jsx";
+import { Badge, DeleteButton, EditButton, Empty, Info, Modal } from "../ui.jsx";
 import { PlayerForm, transfermarktUrl } from "./Players.jsx";
 import { ClubForm } from "./Clubs.jsx";
 import { ContactForm } from "./Contacts.jsx";
@@ -96,10 +96,23 @@ export function PlayerSheet({ playerId, onClose, onChanged }) {
     );
   }
 
+  // Les contacts rattachés au joueur sont supprimés avec lui
+  const deletePlayer = async () => {
+    const extra = contacts.length ? `\n\nSes ${contacts.length} contact(s) seront aussi supprimés.` : "";
+    if (!confirm(`Supprimer ${fullName(p)} de la base ?${extra}`)) return;
+    const { error } = await supabase.from("players").delete().eq("id", p.id);
+    if (error) return alert(error.message);
+    onChanged?.();
+    onClose();
+  };
+
   const years = age(p.birth_date);
   return (
     <>
-      <Modal title={fullName(p)} onClose={onClose} actions={<EditButton onClick={() => setEditing(true)} />}>
+      <Modal title={fullName(p)} onClose={onClose} actions={<>
+        <EditButton onClick={() => setEditing(true)} />
+        <DeleteButton title="Supprimer le joueur" onClick={deletePlayer} />
+      </>}>
         <div className="sheet-head">
           <Badge kind={p.category}>{CATEGORIES[p.category]}</Badge>
           {p.to_verify && <span className="badge badge-verify">À vérifier</span>}
