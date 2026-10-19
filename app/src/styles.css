@@ -253,10 +253,10 @@ td .small { font-size: .78rem; }
 .mrow:hover { background: var(--hover); }
 .mrow.off { opacity: .6; }
 .mrow-time { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
-.mrow-teams { display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; min-width: 0; }
+.mrow-teams { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; min-width: 0; }
 .mrow-teams b { font-weight: 600; }
 .muted-team { color: var(--muted); }
-.mrow-score { color: var(--faint); font-size: .82rem; }
+.mrow-score { color: var(--faint); font-size: .82rem; line-height: 1; }
 .mrow-comp { color: var(--faint); font-size: .76rem; }
 .mrow-comp::before { content: "·"; margin-right: .4rem; }
 .mrow-players { display: flex; flex-wrap: wrap; gap: .35rem .9rem; min-width: 0; }
@@ -459,6 +459,6 @@ tr.group-row .caret { color: var(--faint); display: inline-block; width: 1rem; }
 
 /* ---------- Logos des clubs ---------- */
 .club-logo { display: inline-block; object-fit: contain; flex-shrink: 0; vertical-align: middle; }
-.with-logo { display: inline-flex; align-items: center; gap: .5rem; }
+.with-logo { display: inline-flex; align-items: center; gap: .5rem; line-height: 1.2; }
 .mrow-teams .with-logo { gap: .4rem; }
 .sheet-logo { margin: .2rem 0 1rem; }
