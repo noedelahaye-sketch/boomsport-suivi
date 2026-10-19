@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../supabase.js";
 import { ACCRED_STATUS, CATEGORIES, COUNTRIES, MATCH_STATUS, EVENT_TYPES, fmtDate, fmtTime, fromLocalInput, fullName, remove, save, toLocalInput, useTable } from "../lib.js";
-import { Badge, Empty, Field, IconButton, Modal } from "../ui.jsx";
+import { Badge, ClubLogo, Empty, Field, IconButton, Modal } from "../ui.jsx";
 import { Popover } from "../DataTable.jsx";
 import { EventForm } from "./Calendar.jsx";
 import { PlayerSheet } from "./Sheets.jsx";
@@ -198,7 +198,10 @@ export default function Upcoming() {
 
   const trips = enriched.filter((m) => m.events?.some((e) => e.type === "deplacement")).length;
   const accredOk = enriched.filter((m) => m.accreditations?.some((a) => a.status === "accordee")).length;
-  const team = (name, id) => (id ? <b>{name}</b> : <span className="muted-team">{name}</span>);
+  // Le club suivi en gras avec son logo ; l'adversaire en gris, sans logo
+  const team = (name, clubId) => (clubId
+    ? <span className="with-logo"><ClubLogo id={clubById[clubId]?.fotmob_team_id} size={18} /><b>{name}</b></span>
+    : <span className="muted-team">{name}</span>);
 
   return (
     <>

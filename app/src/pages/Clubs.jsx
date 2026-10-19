@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { COUNTRIES, flag, remove, save, useTable } from "../lib.js";
-import { Empty, Field, Modal } from "../ui.jsx";
+import { ClubLogo, Empty, Field, Modal } from "../ui.jsx";
 import { ClubSheet } from "./Sheets.jsx";
 import DataTable from "../DataTable.jsx";
 
@@ -59,7 +59,7 @@ export default function Clubs() {
 
   const columns = useMemo(() => [
     { key: "name", label: "Club", type: "text", get: (c) => c.name, groupable: false,
-      render: (c) => <><b>{c.name}</b>{c.city && <span className="cell-sub">{c.city}</span>}</> },
+      render: (c) => <span className="with-logo"><ClubLogo id={c.fotmob_team_id} /><b>{c.name}</b>{c.city && <span className="cell-sub">{c.city}</span>}</span> },
     { key: "country", label: "Pays", type: "select", options: COUNTRIES, get: (c) => c.country, render: (c) => flag(c.country) },
     { key: "league", label: "Championnat", type: "select", options: leagues, get: (c) => c.league, render: (c) => c.league ?? "—" },
     { key: "players", label: "Joueurs suivis", type: "number", get: (c) => count(c) },

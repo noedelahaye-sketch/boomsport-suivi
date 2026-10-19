@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../supabase.js";
 import { CATEGORIES, MATCH_STATUS, POSITIONS, age, flag, fmtDate, fmtTime, fullName, useTable } from "../lib.js";
-import { Badge, DeleteButton, EditButton, Empty, Info, Modal } from "../ui.jsx";
+import { Badge, ClubLogo, DeleteButton, EditButton, Empty, Info, Modal } from "../ui.jsx";
 import { PlayerForm, transfermarktUrl } from "./Players.jsx";
 import { ClubForm } from "./Clubs.jsx";
 import { ContactForm } from "./Contacts.jsx";
@@ -23,7 +23,10 @@ function useClubMatches(clubId, limit = 5) {
 }
 
 function MatchList({ matches, clubId }) {
-  const team = (name, id) => (id === clubId ? <b>{name}</b> : name);
+  // Seul le club de la fiche a son logo
+  const team = (name, id, extId) => (id === clubId
+    ? <span className="with-logo"><ClubLogo id={extId} size={16} /><b>{name}</b></span>
+    : name);
   if (!matches.length) return <Empty>Aucun match à venir.</Empty>;
   return (
     <ul className="list">
@@ -32,7 +35,7 @@ function MatchList({ matches, clubId }) {
           <span className="muted small" style={{ minWidth: "7.5rem" }}>
             {fmtDate(m.kickoff)} · {m.date_tbd ? "à conf." : fmtTime(m.kickoff)}
           </span>
-          <span>{team(m.home_team, m.home_club_id)} – {team(m.away_team, m.away_club_id)}</span>
+          <span className="with-logo">{team(m.home_team, m.home_club_id, m.home_ext_id)} – {team(m.away_team, m.away_club_id, m.away_ext_id)}</span>
           {m.status !== "prevu" && <Badge kind={"st-" + m.status}>{MATCH_STATUS[m.status]}</Badge>}
           <span className="muted small right">{m.competition}</span>
         </li>
@@ -81,7 +84,7 @@ export function PlayerSheet({ playerId, onClose, onChanged }) {
 
   const load = useCallback(async () => {
     const { data } = await supabase.from("players")
-      .select("*, club:clubs(id,name,country,league,city,calendar_url)").eq("id", playerId).single();
+      .select("*, club:clubs(id,name,country,league,city,calendar_url,fotmob_team_id)").eq("id", playerId).single();
     setP(data);
     const { data: cs } = await supabase.from("contacts").select("*").eq("player_id", playerId).order("name");
     setContacts(cs ?? []);
@@ -120,7 +123,7 @@ export function PlayerSheet({ playerId, onClose, onChanged }) {
         <dl className="infos">
           <Info label="Club">
             {p.club
-              ? <a href="#" onClick={(e) => { e.preventDefault(); setOpenClub(p.club.id); }}>{p.club.name}</a>
+              ? <a href="#" className="with-logo" onClick={(e) => { e.preventDefault(); setOpenClub(p.club.id); }}><ClubLogo id={p.club.fotmob_team_id} />{p.club.name}</a>
               : "Sans club"}
             {p.club && <div className="muted small">{flag(p.club.country)} {p.club.league}</div>}
           </Info>
@@ -185,6 +188,7 @@ export function ClubSheet({ clubId, onClose, onChanged }) {
   return (
     <>
       <Modal title={c.name} onClose={onClose} actions={<EditButton onClick={() => setEditing(true)} />}>
+        {c.fotmob_team_id && <div className="sheet-logo"><ClubLogo id={c.fotmob_team_id} size={44} /></div>}
         <dl className="infos">
           <Info label="Championnat">{flag(c.country)} {c.league ?? "—"}</Info>
           <Info label="Ville">{c.city}</Info>

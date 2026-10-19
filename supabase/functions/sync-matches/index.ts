@@ -260,7 +260,13 @@ Deno.serve(async (req) => {
     }
   }
 
-  const rows = [...matches.values()].map(({ _home_ext, _away_ext, ...r }) => ({ ...r, last_synced_at: runAt }));
+  // Identifiants FotMob des deux équipes : servent à afficher leurs logos
+  const rows = [...matches.values()].map(({ _home_ext, _away_ext, ...r }) => ({
+    ...r,
+    home_ext_id: r.source === "fotmob" ? _home_ext : null,
+    away_ext_id: r.source === "fotmob" ? _away_ext : null,
+    last_synced_at: runAt,
+  }));
   for (let i = 0; i < rows.length; i += 500) {
     const { error } = await admin.from("matches").upsert(rows.slice(i, i + 500), { onConflict: "external_id" });
     if (error) errors.push(error.message);

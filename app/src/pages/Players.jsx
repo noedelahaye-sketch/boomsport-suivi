@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../supabase.js";
 import { CATEGORIES, COUNTRIES, flag, POSITIONS, age, fmtDate, fmtTime, fullName, remove, save, useTable } from "../lib.js";
-import { Badge, Empty, Field, Modal } from "../ui.jsx";
+import { Badge, ClubLogo, Empty, Field, Modal } from "../ui.jsx";
 import { ContactForm } from "./Contacts.jsx";
 import { PlayerSheet } from "./Sheets.jsx";
 import DataTable from "../DataTable.jsx";
@@ -110,7 +110,7 @@ const PRESETS = [
 ];
 
 export default function Players() {
-  const [players, reload] = useTable("players", "*, club:clubs(id,name,country,league,calendar_url)", "last_name");
+  const [players, reload] = useTable("players", "*, club:clubs(id,name,country,league,calendar_url,fotmob_team_id)", "last_name");
   const [clubs] = useTable("clubs", "*", "name");
   const next = useNextMatches();
   const [edit, setEdit] = useState(null);
@@ -132,7 +132,9 @@ export default function Players() {
       render: (p) => (p.pro_apps == null ? <span className="muted">—</span> : p.pro_apps) },
     { key: "age", label: "Âge", type: "number", get: (p) => age(p.birth_date), render: (p) => (age(p.birth_date) != null ? `${age(p.birth_date)} ans` : "—") },
     { key: "club", label: "Club", type: "text", get: (p) => p.club?.name,
-      render: (p) => (p.club ? <>{p.club.name}<span className="cell-sub">{flag(p.club.country)} {p.club.league}</span></> : "—") },
+      render: (p) => (p.club
+        ? <span className="with-logo"><ClubLogo id={p.club.fotmob_team_id} />{p.club.name}<span className="cell-sub">{flag(p.club.country)} {p.club.league}</span></span>
+        : "—") },
     { key: "country", label: "Pays", type: "select", options: COUNTRIES, get: (p) => p.club?.country, render: (p) => flag(p.club?.country) || "—" },
     { key: "league", label: "Championnat", type: "select", options: leagues, get: (p) => p.club?.league, render: (p) => p.club?.league ?? "—" },
     { key: "other_nationality", label: "Autre nationalité", type: "text", get: (p) => p.other_nationality },

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Fenêtres ouvertes, la dernière est au premier plan (Échap ne ferme qu'elle)
 const openModals = [];
@@ -112,5 +112,15 @@ export function IconButton({ title, onClick, disabled, spin, children }) {
     <button className={"icon-btn" + (spin ? " spin" : "")} onClick={onClick} disabled={disabled} title={title} aria-label={title}>
       <svg viewBox="0 0 24 24" aria-hidden="true">{children}</svg>
     </button>
+  );
+}
+
+// Logo d'un club (images FotMob). Rien n'est affiché sans identifiant ou si l'image manque.
+export function ClubLogo({ id, size = 20 }) {
+  const [broken, setBroken] = useState(false);
+  if (!id || broken) return null;
+  return (
+    <img className="club-logo" src={`https://images.fotmob.com/image_resources/logo/teamlogo/${id}_small.png`}
+      width={size} height={size} alt="" loading="lazy" decoding="async" onError={() => setBroken(true)} />
   );
 }

@@ -456,3 +456,9 @@ tr.group-row .caret { color: var(--faint); display: inline-block; width: 1rem; }
 }
 .fchip button { height: 22px; width: 22px; padding: 0; justify-content: center; border: none; background: transparent; color: inherit; border-radius: 50%; font-size: 1rem; }
 .fchip button:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+
+/* ---------- Logos des clubs ---------- */
+.club-logo { display: inline-block; object-fit: contain; flex-shrink: 0; vertical-align: middle; }
+.with-logo { display: inline-flex; align-items: center; gap: .5rem; }
+.mrow-teams .with-logo { gap: .4rem; }
+.sheet-logo { margin: .2rem 0 1rem; }
