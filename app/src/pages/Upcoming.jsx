@@ -4,6 +4,7 @@ import { ACCRED_STATUS, CATEGORIES, COUNTRIES, MATCH_STATUS, EVENT_TYPES, fmtDat
 import { Badge, Empty, Field, IconButton, Modal } from "../ui.jsx";
 import { Popover } from "../DataTable.jsx";
 import { EventForm } from "./Calendar.jsx";
+import { PlayerSheet } from "./Sheets.jsx";
 
 const DAYS = 14;
 
@@ -113,10 +114,11 @@ function FilterChip({ label, onRemove }) {
 
 export default function Upcoming() {
   const [matches, setMatches] = useState([]);
-  const [players] = useTable("players", "id,first_name,last_name,category,club_id", "last_name");
+  const [players, reloadPlayers] = useTable("players", "id,first_name,last_name,category,club_id", "last_name");
   const [clubs] = useTable("clubs", "*", "name");
   const [editMatch, setEditMatch] = useState(null);
   const [editEvent, setEditEvent] = useState(null);
+  const [viewPlayer, setViewPlayer] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [contacts] = useTable("contacts", "id,player_id,club_id", "id");
   const [filters, setFilters] = useStoredFilters();
@@ -304,8 +306,12 @@ export default function Upcoming() {
                     {team(m.away_team, m.away_club_id)}
                     <span className="mrow-comp">{m.competition}</span>
                   </span>
-                  <span className="mrow-players">
-                    {m._players.map((p) => <span key={p.id} className="pchip"><span className={"dot cat-" + p.category} />{fullName(p)}</span>)}
+                  <span className="mrow-players" onClick={(e) => e.stopPropagation()}>
+                    {m._players.map((p) => (
+                      <button key={p.id} className="pchip" onClick={() => setViewPlayer(p.id)} title={`Voir la fiche de ${fullName(p)}`}>
+                        <span className={"dot cat-" + p.category} />{fullName(p)}
+                      </button>
+                    ))}
                   </span>
                   <span className="mrow-tags">
                     {m.status !== "prevu" && <Badge kind={"st-" + m.status}>{MATCH_STATUS[m.status]}</Badge>}
@@ -330,6 +336,7 @@ export default function Upcoming() {
       </div>
 
       {editMatch && <MatchForm match={editMatch} clubs={clubs} onClose={() => { setEditMatch(null); load(); }} onSaved={() => { setEditMatch(null); load(); }} />}
+      {viewPlayer && <PlayerSheet playerId={viewPlayer} onClose={() => setViewPlayer(null)} onChanged={() => { load(); reloadPlayers(); }} />}
       {editEvent && <EventForm event={editEvent} onClose={() => setEditEvent(null)} onSaved={() => { setEditEvent(null); load(); }} />}
     </>
   );

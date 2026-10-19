@@ -260,7 +260,11 @@ td .small { font-size: .78rem; }
 .mrow-comp { color: var(--faint); font-size: .76rem; }
 .mrow-comp::before { content: "·"; margin-right: .4rem; }
 .mrow-players { display: flex; flex-wrap: wrap; gap: .35rem .9rem; min-width: 0; }
-.pchip { display: inline-flex; align-items: center; gap: .4rem; font-size: .88rem; white-space: nowrap; }
+.pchip {
+  display: inline-flex; align-items: center; gap: .4rem; font-size: .88rem; white-space: nowrap;
+  height: 28px; padding: 0 .55rem; margin-left: -.55rem; border: none; background: transparent; color: var(--text); border-radius: 6px;
+}
+.pchip:hover { background: var(--accent-soft); color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
 .mrow-tags { display: flex; gap: .25rem; flex-wrap: wrap; justify-content: flex-end; }
 .mrow-actions { display: flex; gap: 4px; opacity: .55; transition: opacity .12s var(--ease); }
 .mrow:hover .mrow-actions, .mrow-actions:focus-within { opacity: 1; }
