@@ -101,10 +101,11 @@ const PRESETS = [
   preset("Tous"),
   preset("Internationaux RDC", [{ key: "category", op: "in", value: ["international"] }]),
   preset("Binationaux", [{ key: "category", op: "in", value: ["binational"] }]),
-  preset("Jeunes binationaux", [{ key: "category", op: "in", value: ["jeune_binational"] }]),
+  preset("Pépites", [{ key: "category", op: "in", value: ["jeune_binational"] }]),
+  preset("Jeunes", [{ key: "category", op: "in", value: ["jeune"] }]),
   preset("Internationaux étrangers", [{ key: "category", op: "in", value: ["autre_selection"] }]),
   { name: "Match dans 14 jours", state: { hidden: HIDDEN_BY_DEFAULT, sorts: [{ key: "next", dir: "asc" }],
-    filters: [{ key: "next", op: "next_days", value: "14" }, { key: "category", op: "not_in", value: ["autre_selection"] }] } },
+    filters: [{ key: "next", op: "next_days", value: "14" }, { key: "category", op: "not_in", value: ["autre_selection", "jeune"] }] } },
   preset("À vérifier", [{ key: "to_verify", op: "checked" }]),
 ];
 
@@ -127,6 +128,8 @@ export default function Players() {
     { key: "category", label: "Catégorie", type: "select", options: CATEGORIES, get: (p) => p.category,
       render: (p) => <Badge kind={p.category}>{CATEGORIES[p.category]}</Badge> },
     { key: "position", label: "Poste", type: "select", options: POSITIONS, get: (p) => p.position, render: (p) => POSITIONS[p.position] ?? "—" },
+    { key: "pro_apps", label: "Matchs pro", type: "number", get: (p) => p.pro_apps,
+      render: (p) => (p.pro_apps == null ? <span className="muted">—</span> : p.pro_apps) },
     { key: "age", label: "Âge", type: "number", get: (p) => age(p.birth_date), render: (p) => (age(p.birth_date) != null ? `${age(p.birth_date)} ans` : "—") },
     { key: "club", label: "Club", type: "text", get: (p) => p.club?.name,
       render: (p) => (p.club ? <>{p.club.name}<span className="cell-sub">{flag(p.club.country)} {p.club.league}</span></> : "—") },

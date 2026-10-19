@@ -7,7 +7,7 @@ import { PlayerForm, transfermarktUrl } from "./Players.jsx";
 import { ClubForm } from "./Clubs.jsx";
 import { ContactForm } from "./Contacts.jsx";
 
-const CATEGORY_ORDER = ["international", "jeune_binational", "binational", "autre_selection"];
+const CATEGORY_ORDER = ["international", "jeune_binational", "binational", "jeune", "autre_selection"];
 
 function useClubMatches(clubId, limit = 5) {
   const [matches, setMatches] = useState([]);
@@ -126,6 +126,7 @@ export function PlayerSheet({ playerId, onClose, onChanged }) {
           </Info>
           <Info label="Poste">{POSITIONS[p.position]}</Info>
           <Info label="Âge">{years != null && <>{years} ans <span className="muted small">({fmtDate(p.birth_date, { day: "numeric", month: "long", year: "numeric" })})</span></>}</Info>
+          <Info label="Matchs en pro">{p.pro_apps != null && <>{p.pro_apps}{p.club && p.pro_apps_club != null && <span className="muted small"> · dont {p.pro_apps_club} avec {p.club.name}</span>}</>}</Info>
           <Info label="Autre nationalité">{p.other_nationality}</Info>
           <Info label="Sélection">{p.selection_status}</Info>
           <Info label="Instagram">{p.instagram && (

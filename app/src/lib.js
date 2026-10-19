@@ -4,7 +4,8 @@ import { supabase } from "./supabase.js";
 export const CATEGORIES = {
   international: "International RDC",
   binational: "Binational",
-  jeune_binational: "Jeune binational",
+  jeune_binational: "Pépite",
+  jeune: "Jeune",
   autre_selection: "International étranger",
 };
 

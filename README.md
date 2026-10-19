@@ -33,7 +33,8 @@ Accès : seules les adresses présentes dans `members` voient et modifient les d
   - uniquement les clubs de 1re et 2e division (France et étranger) ; le championnat de chaque club est mis à jour automatiquement depuis FotMob ;
   - pas d'équipes de jeunes ni de réserves : les joueurs U19, B, II… sont rattachés à l'équipe première (l'équipe d'origine est notée dans leur fiche) ;
   - pas de joueurs de plus de 35 ans.
-- Catégories : « International RDC » (sélectionné en équipe A), « Jeune binational » (21 ans ou moins), « Binational » (les autres), « International étranger » (au moins une sélection en A avec un autre pays).
+- Catégories : « International RDC » (sélectionné en équipe A), « Binational », « Pépite » (moins de 21 ans, a déjà joué en pro), « Jeune » (moins de 23 ans, jamais joué en équipe première), « International étranger » (au moins une sélection en A avec un autre pays).
+- Matchs en pro : comptés chaque heure depuis FotMob (fonction `sync-players`, équipes B et jeunes exclues). Les catégories Binational / Pépite / Jeune se mettent à jour automatiquement ; International RDC et International étranger restent manuelles.
 - Collecte complète pour la France ; pour la Belgique, l'Allemagne, la Suisse, l'Angleterre, l'Italie et les Pays-Bas, seuls les joueurs les plus cotés ont été récupérés (Transfermarkt a limité les requêtes). À compléter.
 
 ## Identité visuelle
