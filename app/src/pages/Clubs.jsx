@@ -8,7 +8,7 @@ export function ClubForm({ club, onClose, onSaved }) {
   const [c, setC] = useState(club);
   const submit = async (e) => {
     e.preventDefault();
-    const { players, espn_team_id, espn_league, ...row } = c;
+    const { players, contacts, espn_team_id, espn_league, ...row } = c;
     // Nouvel identifiant FotMob : le club sera resynchronisé au prochain passage
     if ((row.fotmob_team_id || null) !== (club.fotmob_team_id || null)) { row.last_synced_at = null; row.auto_sync = true; }
     if (await save("clubs", row)) onSaved();
@@ -48,7 +48,7 @@ export function ClubForm({ club, onClose, onSaved }) {
 }
 
 export default function Clubs() {
-  const [clubs, reload] = useTable("clubs", "*, players(id,category)", "name");
+  const [clubs, reload] = useTable("clubs", "*, players(id,category), contacts(id)", "name");
   const [edit, setEdit] = useState(null);
   const [view, setView] = useState(null);
 
@@ -59,11 +59,13 @@ export default function Clubs() {
 
   const columns = useMemo(() => [
     { key: "name", label: "Club", type: "text", get: (c) => c.name, groupable: false,
-      render: (c) => <span className="with-logo"><ClubLogo id={c.fotmob_team_id} /><b>{c.name}</b>{c.city && <span className="cell-sub">{c.city}</span>}</span> },
+      render: (c) => <span className="with-logo"><ClubLogo id={c.fotmob_team_id} /><b>{c.name}</b>{c.city && <span className="cell-sub">{c.city}</span>}{c.contacts?.length > 0 && <span className="cpill cpill-mail" title={`${c.contacts.length} contact(s) enregistré(s)`}>✉ {c.contacts.length}</span>}</span> },
     { key: "country", label: "Pays", type: "select", options: COUNTRIES, get: (c) => c.country, render: (c) => flag(c.country) },
     { key: "league", label: "Championnat", type: "select", options: leagues, get: (c) => c.league, render: (c) => c.league ?? "—" },
     { key: "players", label: "Joueurs suivis", type: "number", get: (c) => count(c) },
     { key: "internationals", label: "Internationaux RDC", type: "number", get: (c) => count(c, "international") },
+    { key: "contacts", label: "Contacts", type: "number", get: (c) => (c.contacts ?? []).length,
+      render: (c) => ((c.contacts ?? []).length ? <span className="cpill cpill-mail">✉ {c.contacts.length}</span> : <span className="muted">—</span>) },
     { key: "auto", label: "Calendrier auto", type: "bool", get: (c) => !!c.fotmob_team_id, stopClick: true,
       render: (c) => (c.fotmob_team_id
         ? <a href={`https://www.fotmob.com/teams/${c.fotmob_team_id}/fixtures`} target="_blank" rel="noreferrer">✓ FotMob ↗</a>
@@ -75,6 +77,7 @@ export default function Clubs() {
   const presets = [
     { name: "Tous", state: { sorts: [{ key: "name", dir: "asc" }] } },
     { name: "Par championnat", state: { group: "league", sorts: [{ key: "players", dir: "desc" }] } },
+    { name: "Avec un contact", state: { filters: [{ key: "contacts", op: "gte", value: "1" }], sorts: [{ key: "contacts", dir: "desc" }] } },
     { name: "Avec internationaux RDC", state: { filters: [{ key: "internationals", op: "gte", value: "1" }], sorts: [{ key: "internationals", dir: "desc" }] } },
   ];
 
