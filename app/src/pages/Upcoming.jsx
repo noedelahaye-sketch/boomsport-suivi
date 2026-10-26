@@ -8,7 +8,7 @@ import { PlayerSheet } from "./Sheets.jsx";
 
 const DAYS = 14;
 
-function MatchForm({ match, clubs, onClose, onSaved }) {
+function MatchForm({ match, clubs, onClose, onSaved, onPlayer }) {
   const [m, setM] = useState({ ...match, _kickoff: toLocalInput(match.kickoff) });
   const [accreds, setAccreds] = useState([]);
   const [contacts] = useTable("contacts", "id,name,role,organization", "name");
@@ -62,6 +62,19 @@ function MatchForm({ match, clubs, onClose, onSaved }) {
         </form>
       )}
 
+      {match._players?.length > 0 && (
+        <section className="sub">
+          <h3>Joueurs concernés</h3>
+          <div className="mrow-players">
+            {match._players.map((p) => (
+              <button key={p.id} className="pchip" onClick={() => onPlayer(p.id)} title={`Voir la fiche de ${fullName(p)}`}>
+                <span className={"dot cat-" + p.category} />{fullName(p)}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {m.id && (
         <section className="sub">
           <div className="row-between">
@@ -103,6 +116,68 @@ function useStoredFilters() {
   return [filters, setFilters];
 }
 
+// Lundi de la semaine contenant la date
+function weekStart(d) {
+  const x = new Date(d); x.setHours(0, 0, 0, 0);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+
+// Calendrier semaine par semaine : une colonne par jour, les matchs triés par heure
+function WeekCalendar({ matches, clubById, onOpen }) {
+  const today = useMemo(() => { const t = new Date(); t.setHours(0, 0, 0, 0); return t; }, []);
+  const first = useMemo(() => weekStart(today), [today]);
+  const lastWeek = Math.floor((weekStart(new Date(today.getTime() + DAYS * 86400000)).getTime() - first.getTime()) / (7 * 86400000));
+  const [week, setWeek] = useState(0);
+  const start = new Date(first.getTime() + week * 7 * 86400000);
+  const end = new Date(start.getTime() + 6 * 86400000);
+  const horizon = today.getTime() + DAYS * 86400000;
+
+  const cols = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const key = d.toDateString();
+    return { d, key, list: matches.filter((m) => new Date(m.kickoff).toDateString() === key) };
+  });
+  const range = `${fmtDate(start, { day: "numeric", month: "long" })} – ${fmtDate(end, { day: "numeric", month: "long" })}`;
+
+  return (
+    <div className="wcal">
+      <div className="wcal-head">
+        <button className="small" disabled={week === 0} onClick={() => setWeek(week - 1)}>‹ Précédente</button>
+        <b>Semaine du {range}</b>
+        <button className="small" disabled={week >= lastWeek} onClick={() => setWeek(week + 1)}>Suivante ›</button>
+      </div>
+      <div className="wcal-grid">
+        {cols.map(({ d, key, list }) => {
+          const out = d < today || d.getTime() >= horizon;
+          return (
+            <div key={key} className={"wcal-day" + (out ? " out" : "") + (d.getTime() === today.getTime() ? " today" : "")}>
+              <div className="wcal-dayhead">
+                <span>{fmtDate(d, { weekday: "short" })}</span>
+                <b>{d.getDate()}</b>
+              </div>
+              {list.map((m) => {
+                const off = ["annule", "reporte", "retire"].includes(m.status);
+                const logo = (name, id) => id
+                  ? <span className="with-logo"><ClubLogo id={clubById[id]?.fotmob_team_id} size={16} /><b>{name}</b></span>
+                  : <span className="muted-team">{name}</span>;
+                return (
+                  <div key={m.id} className={"wcal-match" + (off ? " off" : "")} onClick={() => onOpen(m)}>
+                    <span className="wcal-time">{m.date_tbd ? "Horaire ?" : fmtTime(m.kickoff)}{off && ` · ${MATCH_STATUS[m.status]}`}</span>
+                    {logo(m.home_team, m.home_club_id)}
+                    {logo(m.away_team, m.away_club_id)}
+                    <span className="wcal-comp">{m.competition}</span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function FilterChip({ label, onRemove }) {
   return (
     <span className="fchip">
@@ -120,6 +195,8 @@ export default function Upcoming() {
   const [editEvent, setEditEvent] = useState(null);
   const [viewPlayer, setViewPlayer] = useState(null);
   const [syncing, setSyncing] = useState(false);
+  const [view, setView] = useState(() => { try { return localStorage.getItem("upcoming:view") || "list"; } catch { return "list"; } });
+  const changeView = (v) => { setView(v); try { localStorage.setItem("upcoming:view", v); } catch { /* ignoré */ } };
   const [contacts] = useTable("contacts", "id,player_id,club_id", "id");
   const [filters, setFilters] = useStoredFilters();
   const { cats, countries, comps, contact, planning, onlyTracked } = filters;
@@ -213,6 +290,11 @@ export default function Upcoming() {
           </span>
         </div>
         <div className="actions">
+          <div className="segmented">
+            {[["list", "Liste"], ["week", "Semaines"]].map(([k, l]) => (
+              <button key={k} className={view === k ? "on" : ""} onClick={() => changeView(k)}>{l}</button>
+            ))}
+          </div>
           <IconButton title={syncing ? "Mise à jour…" : "Mettre à jour les matchs"} onClick={sync} disabled={syncing} spin={syncing}>
             <path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" />
           </IconButton>
@@ -284,13 +366,15 @@ export default function Upcoming() {
         {!onlyTracked && <FilterChip label="Tous les matchs" onRemove={() => setF({ onlyTracked: true })} />}
       </div>
 
-      {days.length === 0 && (
+      {view === "week" && <WeekCalendar matches={enriched} clubById={clubById} onOpen={setEditMatch} />}
+
+      {view === "list" && days.length === 0 && (
         <Empty>
           Aucun match sur les 14 prochains jours. Mets à jour les matchs ou ajoute-en un à la main.
         </Empty>
       )}
 
-      <div className="mlist">
+      {view === "list" && <div className="mlist">
         {days.map(([day, list]) => (
           <section key={day}>
             <h2 className="mlist-day">
@@ -336,9 +420,9 @@ export default function Upcoming() {
             })}
           </section>
         ))}
-      </div>
+      </div>}
 
-      {editMatch && <MatchForm match={editMatch} clubs={clubs} onClose={() => { setEditMatch(null); load(); }} onSaved={() => { setEditMatch(null); load(); }} />}
+      {editMatch && <MatchForm match={editMatch} clubs={clubs} onPlayer={setViewPlayer} onClose={() => { setEditMatch(null); load(); }} onSaved={() => { setEditMatch(null); load(); }} />}
       {viewPlayer && <PlayerSheet playerId={viewPlayer} onClose={() => setViewPlayer(null)} onChanged={() => { load(); reloadPlayers(); }} />}
       {editEvent && <EventForm event={editEvent} onClose={() => setEditEvent(null)} onSaved={() => { setEditEvent(null); load(); }} />}
     </>

@@ -118,17 +118,34 @@ export default function DataTable({ id, columns, rows, onRowClick, presets = [],
   const storageKey = `datatable:${id}`;
   const saved = load(storageKey);
   const [views, setViews] = useState(saved?.views ?? []);
+  const [removed, setRemoved] = useState(saved?.removed ?? []);
   const [viewName, setViewName] = useState(saved?.viewName ?? presets[0]?.name ?? "");
   const [state, setState] = useState(saved?.state ?? { ...EMPTY_STATE, sorts: defaultSort, ...presets[0]?.state });
   const [collapsed, setCollapsed] = useState({});
+  // Menu « Supprimer la vue » : clic droit sur ordinateur, appui long sur téléphone
+  const [viewMenu, setViewMenu] = useState(null);
+  const press = useRef(null);
+  const openMenu = (v, x, y) => setViewMenu({ v, x: Math.min(x, window.innerWidth - 270), y, at: Date.now() });
+  const startPress = (v, e) => {
+    const t = e.touches[0];
+    press.current = setTimeout(() => { press.current = "fired"; openMenu(v, t.clientX, t.clientY); }, 500);
+  };
+  const endPress = () => { if (press.current && press.current !== "fired") clearTimeout(press.current); };
+  useEffect(() => {
+    if (!viewMenu) return;
+    // Le relâchement du doigt après l'appui long ne doit pas refermer le menu
+    const close = () => { if (Date.now() - viewMenu.at > 700) setViewMenu(null); };
+    window.addEventListener("pointerdown", close); window.addEventListener("scroll", close, true);
+    return () => { window.removeEventListener("pointerdown", close); window.removeEventListener("scroll", close, true); };
+  }, [viewMenu]);
 
-  useEffect(() => { store(storageKey, { views, viewName, state }); }, [storageKey, views, viewName, state]);
+  useEffect(() => { store(storageKey, { views, removed, viewName, state }); }, [storageKey, views, removed, viewName, state]);
 
   const colByKey = useMemo(() => Object.fromEntries(columns.map((c) => [c.key, c])), [columns]);
   const visible = columns.filter((c) => !state.hidden.includes(c.key));
   const set = (patch) => setState((s) => ({ ...s, ...patch }));
 
-  const allViews = [...presets.map((p) => ({ ...p, preset: true })), ...views];
+  const allViews = [...presets.filter((p) => !removed.includes(p.name)).map((p) => ({ ...p, preset: true })), ...views];
   const applyView = (v) => { setViewName(v.name); setState({ ...EMPTY_STATE, sorts: defaultSort, ...v.state }); };
   const saveView = () => {
     const name = prompt("Nom de la vue :", viewName && !presets.some((p) => p.name === viewName) ? viewName : "");
@@ -136,10 +153,15 @@ export default function DataTable({ id, columns, rows, onRowClick, presets = [],
     setViews((vs) => [...vs.filter((v) => v.name !== name), { name, state }]);
     setViewName(name);
   };
-  const deleteView = (name) => {
+  const deleteView = (v) => {
+    const name = v.name;
     if (!confirm(`Supprimer la vue « ${name} » ?`)) return;
-    setViews((vs) => vs.filter((v) => v.name !== name));
-    if (viewName === name) applyView(allViews[0] ?? { name: "", state: {} });
+    if (v.preset) setRemoved((r) => [...r, name]);
+    else setViews((vs) => vs.filter((x) => x.name !== name));
+    if (viewName === name) {
+      const next = allViews.find((x) => x.name !== name);
+      applyView(next ?? { name: "", state: {} });
+    }
   };
 
   // Filtrage, recherche et tri
@@ -199,15 +221,22 @@ export default function DataTable({ id, columns, rows, onRowClick, presets = [],
   return (
     <div className="datatable">
       <div className="dt-head">
-        {allViews.length > 0 && (
+        {(allViews.length > 0 || presets.length > 0) && (
           <div className="views">
             {allViews.map((v) => (
-              <span key={v.name} className={"view-tab" + (v.name === viewName ? " on" : "")}>
-                <button onClick={() => applyView(v)}>{v.name}</button>
-                {!v.preset && <button className="view-del" title="Supprimer la vue" aria-label={`Supprimer la vue ${v.name}`} onClick={() => deleteView(v.name)}>×</button>}
+              <span key={v.name} className={"view-tab" + (v.name === viewName ? " on" : "")}
+                onContextMenu={(e) => { e.preventDefault(); openMenu(v, e.clientX, e.clientY); }}
+                onTouchStart={(e) => startPress(v, e)} onTouchEnd={(e) => { if (press.current === "fired") e.preventDefault(); endPress(); }} onTouchMove={endPress} onTouchCancel={endPress}>
+                <button onClick={(e) => { if (press.current === "fired") { press.current = null; e.preventDefault(); return; } applyView(v); }}>{v.name}</button>
               </span>
             ))}
             <button className="view-add" onClick={saveView} title="Enregistrer les filtres et tris actuels comme une vue" aria-label="Enregistrer la vue">+</button>
+          </div>
+        )}
+
+        {viewMenu && (
+          <div className="ctx-menu" style={{ left: viewMenu.x, top: viewMenu.y }} onPointerDown={(e) => e.stopPropagation()}>
+            <button className="danger" onClick={() => { const v = viewMenu.v; setViewMenu(null); deleteView(v); }}>Supprimer la vue « {viewMenu.v.name} »</button>
           </div>
         )}
 

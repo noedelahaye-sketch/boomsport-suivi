@@ -338,7 +338,6 @@ button.icon.delete:hover { color: var(--red-ink); background: var(--red-soft); }
 .view-tab button:hover { color: var(--text); background: transparent; }
 .view-tab.on { border-bottom-color: var(--text); }
 .view-tab.on button { color: var(--text); font-weight: 600; }
-.view-tab .view-del { width: 20px; padding: 0; justify-content: center; color: var(--faint); margin-left: -.4rem; }
 .view-add { height: 28px; width: 28px; padding: 0; justify-content: center; border: none; background: transparent; color: var(--faint); font-size: 1.1rem; }
 .view-add:hover { color: var(--text); }
 .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding-bottom: .55rem; }
@@ -462,3 +461,29 @@ tr.group-row .caret { color: var(--faint); display: inline-block; width: 1rem; }
 .with-logo { display: inline-flex; align-items: center; gap: .5rem; line-height: 1.2; }
 .mrow-teams .with-logo { gap: .4rem; }
 .sheet-logo { margin: .2rem 0 1rem; }
+
+/* Calendrier semaine par semaine (14 jours) */
+.wcal-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; flex-wrap: wrap; }
+.wcal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .5rem; }
+.wcal-day { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: .5rem; min-height: 180px; display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.wcal-day.out { opacity: .5; background: var(--hover); }
+.wcal-day.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.wcal-dayhead { display: flex; align-items: baseline; justify-content: space-between; text-transform: capitalize; color: var(--muted); font-size: .85rem; }
+.wcal-dayhead b { font-size: 1.15rem; color: var(--text); }
+.wcal-match { display: flex; flex-direction: column; gap: .15rem; padding: .4rem .5rem; border-radius: var(--radius-sm); background: var(--accent-soft); cursor: pointer; font-size: .85rem; min-width: 0; }
+.wcal-match:hover { outline: 1px solid var(--accent); }
+.wcal-match.off { opacity: .6; text-decoration: line-through; }
+.wcal-time { font-weight: 600; color: var(--accent-ink); font-size: .8rem; }
+.wcal-comp { color: var(--muted); font-size: .75rem; }
+.wcal-match .pchip { display: block; text-align: left; }
+@media (max-width: 900px) {
+  .wcal-grid { grid-template-columns: 1fr; }
+  .wcal-day { min-height: 0; }
+  .wcal-day.out { display: none; }
+}
+
+.view-tab { -webkit-touch-callout: none; user-select: none; }
+.ctx-menu { position: fixed; z-index: 60; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding: 4px; max-width: 260px; }
+.ctx-menu button { display: block; width: 100%; text-align: left; border: none; background: transparent; padding: .5rem .7rem; border-radius: 4px; font-size: .9rem; }
+.ctx-menu button.danger { color: var(--red); }
+.ctx-menu button:hover { background: var(--red-soft); }
