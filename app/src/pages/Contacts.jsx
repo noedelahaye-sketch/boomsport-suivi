@@ -64,7 +64,7 @@ function UseTemplate({ template, onClose }) {
       footer={<>
         <span className="spacer" />
         <button onClick={onClose}>Fermer</button>
-        <a className="button" href={mail}>Ouvrir dans la messagerie</a>
+        <a className="btn-link" href={mail}>Ouvrir dans la messagerie</a>
         <button className="primary" onClick={copy}>{copied ? "Copié ✓" : "Copier le message"}</button>
       </>}>
       <div className="grid">
