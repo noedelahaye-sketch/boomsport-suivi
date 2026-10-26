@@ -4,6 +4,26 @@ import { CONTACT_ROLES, fmtDate, fullName, remove, save, useTable } from "../lib
 import { Empty, Field, Modal } from "../ui.jsx";
 import DataTable from "../DataTable.jsx";
 
+// Pastilles : un moyen de contact par colonne remplie
+const igUrl = (v) => (/^https?:/i.test(v) ? v : `https://instagram.com/${v.replace(/^@/, "")}`);
+const liUrl = (v) => (/^https?:/i.test(v) ? v : `https://${v.replace(/^\/\//, "")}`);
+function ContactPills({ c }) {
+  const items = [
+    c.email && ["mail", "Email", `mailto:${c.email}`, c.email],
+    c.phone && ["tel", "Tél.", `tel:${c.phone}`, c.phone],
+    c.linkedin && ["li", "LinkedIn", liUrl(c.linkedin), c.linkedin],
+    c.instagram && ["ig", "Instagram", igUrl(c.instagram), c.instagram],
+  ].filter(Boolean);
+  if (!items.length) return null;
+  return (
+    <span className="cpills" onClick={(e) => e.stopPropagation()}>
+      {items.map(([k, label, href, title]) => (
+        <a key={k} className={"cpill cpill-" + k} href={href} title={title} {...(k === "li" || k === "ig" ? { target: "_blank", rel: "noreferrer" } : {})}>{label}</a>
+      ))}
+    </span>
+  );
+}
+
 const AUDIENCES = ["Club", "Agent", "Famille", "Presse ligue", "Joueur", "Autre"];
 
 function TemplateForm({ template, onClose, onSaved }) {
@@ -156,6 +176,8 @@ export function ContactForm({ contact, onClose, onSaved }) {
         <Field label="Organisation" name="organization" value={c} onChange={setC} placeholder="Agence, club, ligue…" />
         <Field label="Téléphone" name="phone" type="tel" value={c} onChange={setC} />
         <Field label="Email" name="email" type="email" value={c} onChange={setC} />
+        <Field label="LinkedIn" name="linkedin" value={c} onChange={setC} placeholder="linkedin.com/in/…" />
+        <Field label="Instagram" name="instagram" value={c} onChange={setC} placeholder="@pseudo" />
         <Field label="Joueur lié" name="player_id" value={c} onChange={setC}
           options={Object.fromEntries(players.map((p) => [p.id, fullName(p)]))} />
         <Field label="Club lié" name="club_id" value={c} onChange={setC}
@@ -192,7 +214,7 @@ export default function Contacts() {
 
   const columns = useMemo(() => [
     { key: "name", label: "Nom", type: "text", get: (c) => c.name, groupable: false,
-      render: (c) => <><b>{c.name}</b>{c.organization && <span className="cell-sub">{c.organization}</span>}</> },
+      render: (c) => <><b>{c.name}</b>{c.organization && <span className="cell-sub">{c.organization}</span>}<ContactPills c={c} /></> },
     { key: "role", label: "Rôle", type: "select", options: Object.fromEntries(CONTACT_ROLES.map((r) => [r, r])), get: (c) => c.role },
     { key: "organization", label: "Organisation", type: "text", get: (c) => c.organization },
     { key: "player", label: "Joueur", type: "text", get: (c) => fullName(c.player) || null },
@@ -201,6 +223,10 @@ export default function Contacts() {
       render: (c) => (c.phone ? <a href={`tel:${c.phone}`}>{c.phone}</a> : "—") },
     { key: "email", label: "Email", type: "text", groupable: false, stopClick: true, get: (c) => c.email,
       render: (c) => (c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : "—") },
+    { key: "linkedin", label: "LinkedIn", type: "text", groupable: false, stopClick: true, get: (c) => c.linkedin,
+      render: (c) => (c.linkedin ? <a href={liUrl(c.linkedin)} target="_blank" rel="noreferrer">{c.linkedin.replace(/^https?:\/\/(www\.)?/, "")}</a> : "—") },
+    { key: "instagram", label: "Instagram", type: "text", groupable: false, stopClick: true, get: (c) => c.instagram,
+      render: (c) => (c.instagram ? <a href={igUrl(c.instagram)} target="_blank" rel="noreferrer">{c.instagram.startsWith("http") ? c.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "") : c.instagram}</a> : "—") },
   ], []);
 
   return (
@@ -210,8 +236,8 @@ export default function Contacts() {
         <button className="primary" onClick={() => setEdit({})}>+ Contact</button>
       </div>
       <DataTable id="contacts" columns={columns} rows={contacts} onRowClick={(c) => setEdit(c)}
-        presets={[{ name: "Tous", state: { hidden: ["organization"], sorts: [{ key: "name", dir: "asc" }] } },
-                  { name: "Par rôle", state: { hidden: ["organization"], group: "role", sorts: [{ key: "name", dir: "asc" }] } }]}
+        presets={[{ name: "Tous", state: { hidden: ["organization", "linkedin", "instagram"], sorts: [{ key: "name", dir: "asc" }] } },
+                  { name: "Par rôle", state: { hidden: ["organization", "linkedin", "instagram"], group: "role", sorts: [{ key: "name", dir: "asc" }] } }]}
         emptyText="Aucun contact pour l'instant. Ajoute agents, familles et services presse." />
       <Templates />
       {edit && <ContactForm contact={edit} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); reload(); }} />}

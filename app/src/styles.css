@@ -491,3 +491,13 @@ tr.group-row .caret { color: var(--faint); display: inline-block; width: 1rem; }
 #tpl-form textarea { min-height: 18rem; }
 .btn-link { display: inline-flex; align-items: center; height: var(--control); padding: 0 .9rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); text-decoration: none; font-size: .92rem; }
 .btn-link:hover { background: var(--hover); }
+
+/* Pastilles de moyens de contact */
+.cpills { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .25rem; }
+.cpill { font-size: .72rem; font-weight: 600; line-height: 1; padding: .22rem .5rem; border-radius: 999px; text-decoration: none; background: var(--hover); color: var(--muted); }
+.cpill:hover { text-decoration: none; filter: brightness(.95); }
+.cpill-mail { background: var(--accent-soft); color: var(--accent-ink); }
+.cpill-tel { background: var(--green-soft); color: var(--green-ink); }
+.cpill-li { background: #e3eefb; color: #0a66c2; }
+.cpill-ig { background: #fbe4ee; color: #b0225f; }
+@media (prefers-color-scheme: dark) { .cpill-li { background: #11294a; color: #8cc4ff; } .cpill-ig { background: #3a1428; color: #ff9fc4; } }
